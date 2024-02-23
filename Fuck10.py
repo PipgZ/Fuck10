@@ -51,7 +51,7 @@ def getOcrResult(image):
         max_k = -1
         gray_height, gray_width, gray_channel = digit_image.shape
         gray_digit_img = cv2.cvtColor(digit_image, cv2.COLOR_BGR2GRAY)
-        
+
         for k in range(1, 10):
             img = cv2.imread("std_img/" + str(k) + ".png")
             gray_img = cv2.cvtColor(cv2.resize(img, (gray_width, gray_height)), cv2.COLOR_BGR2GRAY)
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         print("{} ".format(ocrResults[i].v), end="")
 
     if len(ocrResults) < kGameCol * kGameRow:
-        print("数字OCR识别失败！")
+        print("数字识别失败！")
         exit(-1)
 
     gameMap, rectMap = getGameMapFromOcrResult(ocrResults)
