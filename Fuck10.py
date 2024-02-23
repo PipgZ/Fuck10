@@ -1,35 +1,15 @@
 import cv2
-import pytesseract
 import numpy as np
-import DataStruct as DS
 from ppadb.client import Client as AdbClient
 from skimage.metrics import structural_similarity as ssim
+
+import DataStruct as DS
 
 kGameCol = 10
 kGameRow = 16
 kGameSum = 10
 kGameImageName = 'game.jpg'
 
-# ADB 链接手机
-# 创建ADB客户端对象
-
-client = AdbClient(host="127.0.0.1", port=5037)
-
-# 获取已连接的设备列表
-devices = client.devices()
-if len(devices) == 0:
-    print("未检测到手机设备连接")
-    exit(0)
-
-# 默认取第一个
-device = devices[0]
-
-# 获取屏幕截图
-screenshot = device.screencap()
-
-# 将屏幕截图转换为OpenCV图像
-screen_shot_image = cv2.imdecode(np.frombuffer(screenshot, np.uint8), cv2.IMREAD_COLOR)
-# cv2.imwrite(kGameImageName, screen_shot_image)
 
 def rect_sort(ocr_result):
     # 返回用于排序的值
@@ -98,18 +78,6 @@ def getGameMapFromOcrResult(ocr_results):
     return game_map, rect_map
 
 
-ocrResults = get_ocr_result(screen_shot_image)
-
-for i in range(len(ocrResults)):
-    print("{} ".format(ocrResults[i].v), end="")
-
-if len(ocrResults) < kGameCol * kGameRow:
-    print("数字OCR识别失败！")
-    exit(-1)
-
-gameMap, rectMap = getGameMapFromOcrResult(ocrResults)
-
-
 def debugInfo(head_text, vector2):
     print(head_text)
     for row in range(len(vector2)):
@@ -147,7 +115,7 @@ def getSum10Rects(sum_map2, s_col, s_row):
 
 
 def resetZero(map2, rect):
-    res = 0 # 重置为0的个数
+    res = 0  # 重置为0的个数
     for row in range(rect.y, rect.y + rect.h):
         for col in range(rect.x, rect.x + rect.w):
             if map2[row][col] == 0:
@@ -183,24 +151,57 @@ def getSteps(gameMaps, score, steps):
 def sendDragEvent(device, start_x, start_y, end_x, end_y, duration_ms):
     cmd = f"input swipe {start_x} {start_y} {end_x} {end_y} {duration_ms}"
     device.shell(cmd)
-# debugInfo("Game Map:", gameMap)
+    # debugInfo("Game Map:", gameMap)
 
 
-result_steps = []
-result_steps_pixel = []
-if getSteps(gameMap, 0, result_steps):
-    print("找到了一组解")
-    for i in range(len(result_steps)):
-        bxi = result_steps[i].x
-        byi = result_steps[i].y
-        exi = result_steps[i].w + bxi - 1
-        eyi = result_steps[i].h + byi - 1
-        # print("Rect({}, {}, {}, {})".format(bxi, byi, exi, eyi))
-        start_point_x, start_point_y = rectMap[byi][bxi].center()
-        end_point_x, end_point_y = rectMap[eyi][exi].center()
-        # print("Start({}, {}), End({}, {})".format(start_point_x, start_point_y, end_point_x, end_point_y))
-        result_steps_pixel.append(DS.Rect(start_point_x, start_point_y, end_point_x - start_point_x, end_point_y - start_point_y))
-        sendDragEvent(device, start_point_x, start_point_y, end_point_x, end_point_y, 200)
-else:
-    print("没有找到解")
+if __name__ == "__main__":
+    # ADB 链接手机
+    # 创建ADB客户端对象
 
+    client = AdbClient(host="127.0.0.1", port=5037)
+
+    # 获取已连接的设备列表
+    devices = client.devices()
+    if len(devices) == 0:
+        print("未检测到手机设备连接")
+        exit(0)
+
+    # 默认取第一个
+    device = devices[0]
+
+    # 获取屏幕截图
+    screenshot = device.screencap()
+
+    # 将屏幕截图转换为OpenCV图像
+    screen_shot_image = cv2.imdecode(np.frombuffer(screenshot, np.uint8), cv2.IMREAD_COLOR)
+
+    # cv2.imwrite(kGameImageName, screen_shot_image)
+
+    ocrResults = get_ocr_result(screen_shot_image)
+    for i in range(len(ocrResults)):
+        print("{} ".format(ocrResults[i].v), end="")
+
+    if len(ocrResults) < kGameCol * kGameRow:
+        print("数字OCR识别失败！")
+        exit(-1)
+
+    gameMap, rectMap = getGameMapFromOcrResult(ocrResults)
+
+    result_steps = []
+    result_steps_pixel = []
+    if getSteps(gameMap, 0, result_steps):
+        print("找到了一组解")
+        for i in range(len(result_steps)):
+            bxi = result_steps[i].x
+            byi = result_steps[i].y
+            exi = result_steps[i].w + bxi - 1
+            eyi = result_steps[i].h + byi - 1
+            # print("Rect({}, {}, {}, {})".format(bxi, byi, exi, eyi))
+            start_point_x, start_point_y = rectMap[byi][bxi].center()
+            end_point_x, end_point_y = rectMap[eyi][exi].center()
+            # print("Start({}, {}), End({}, {})".format(start_point_x, start_point_y, end_point_x, end_point_y))
+            result_steps_pixel.append(
+                DS.Rect(start_point_x, start_point_y, end_point_x - start_point_x, end_point_y - start_point_y))
+            sendDragEvent(device, start_point_x, start_point_y, end_point_x, end_point_y, 200)
+    else:
+        print("没有找到解")
