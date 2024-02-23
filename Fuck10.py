@@ -16,7 +16,7 @@ def rect_sort(ocr_result):
     return ocr_result.rect.y * 10 + ocr_result.rect.x
 
 
-def get_ocr_result(image):
+def getOcrResult(image):
     # 将图像转换为灰度图
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -51,6 +51,7 @@ def get_ocr_result(image):
         max_k = -1
         gray_height, gray_width, gray_channel = digit_image.shape
         gray_digit_img = cv2.cvtColor(digit_image, cv2.COLOR_BGR2GRAY)
+        
         for k in range(1, 10):
             img = cv2.imread("std_img/" + str(k) + ".png")
             gray_img = cv2.cvtColor(cv2.resize(img, (gray_width, gray_height)), cv2.COLOR_BGR2GRAY)
@@ -177,7 +178,7 @@ if __name__ == "__main__":
 
     # cv2.imwrite(kGameImageName, screen_shot_image)
 
-    ocrResults = get_ocr_result(screen_shot_image)
+    ocrResults = getOcrResult(screen_shot_image)
     for i in range(len(ocrResults)):
         print("{} ".format(ocrResults[i].v), end="")
 
