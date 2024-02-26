@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
-from ppadb.client import Client as AdbClient
 from skimage.metrics import structural_similarity as ssim
 
 import DataStruct as DS
+from AdbHelper import AdbHelper
 
 kGameCol = 10
 kGameRow = 16
@@ -148,18 +148,11 @@ def getSteps(gameMaps, score, steps):
     return False
 
 
-# 模拟触摸拖拽事件
-def sendDragEvent(device, start_x, start_y, end_x, end_y, duration_ms):
-    cmd = f"input swipe {start_x} {start_y} {end_x} {end_y} {duration_ms}"
-    device.shell(cmd)
-    # debugInfo("Game Map:", gameMap)
-
-
 if __name__ == "__main__":
     # ADB 链接手机
     # 创建ADB客户端对象
 
-    client = AdbClient(host="127.0.0.1", port=5037)
+    client = AdbHelper.get_client("127.0.0.1", 5037)
 
     # 获取已连接的设备列表
     devices = client.devices()
@@ -171,7 +164,7 @@ if __name__ == "__main__":
     device = devices[0]
 
     # 获取屏幕截图
-    screenshot = device.screencap()
+    screenshot = AdbHelper.get_screenshot(device)
 
     # 将屏幕截图转换为OpenCV图像
     screen_shot_image = cv2.imdecode(np.frombuffer(screenshot, np.uint8), cv2.IMREAD_COLOR)
@@ -203,6 +196,7 @@ if __name__ == "__main__":
             # print("Start({}, {}), End({}, {})".format(start_point_x, start_point_y, end_point_x, end_point_y))
             result_steps_pixel.append(
                 DS.Rect(start_point_x, start_point_y, end_point_x - start_point_x, end_point_y - start_point_y))
-            sendDragEvent(device, start_point_x, start_point_y, end_point_x, end_point_y, 200)
+
+            AdbHelper.send_drag_event(device, DS.DragEvent(start_point_x, start_point_y, end_point_x, end_point_y, 200))
     else:
         print("没有找到解")
