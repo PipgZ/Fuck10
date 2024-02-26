@@ -4,11 +4,7 @@ from skimage.metrics import structural_similarity as ssim
 
 import DataStruct as DS
 from AdbHelper import AdbHelper
-
-kGameCol = 10
-kGameRow = 16
-kGameSum = 10
-kGameImageName = 'game.jpg'
+from Const import Const
 
 
 def rect_sort(ocr_result):
@@ -71,11 +67,11 @@ def getOcrResult(image):
 
 
 def getGameMapFromOcrResult(ocr_results):
-    game_map = [[0 for _ in range(kGameCol)] for _ in range(kGameRow)]
-    rect_map = [[DS.Rect(0, 0, 0, 0) for _ in range(kGameCol)] for _ in range(kGameRow)]
+    game_map = [[0 for _ in range(Const.kGameCol)] for _ in range(Const.kGameRow)]
+    rect_map = [[DS.Rect(0, 0, 0, 0) for _ in range(Const.kGameCol)] for _ in range(Const.kGameRow)]
     for i in range(len(ocr_results)):
-        game_map[int(i / kGameCol)][i % kGameCol] = ocr_results[i].v
-        rect_map[int(i / kGameCol)][i % kGameCol] = ocr_results[i].rect
+        game_map[int(i / Const.kGameCol)][i % Const.kGameCol] = ocr_results[i].v
+        rect_map[int(i / Const.kGameCol)][i % Const.kGameCol] = ocr_results[i].rect
     return game_map, rect_map
 
 
@@ -88,9 +84,9 @@ def debugInfo(head_text, vector2):
 
 
 def getPrefixSum2(map2):
-    sumMap = [[0 for _ in range(kGameCol)] for _ in range(kGameRow)]
-    for row in range(kGameRow):
-        for col in range(kGameCol):
+    sumMap = [[0 for _ in range(Const.kGameCol)] for _ in range(Const.kGameRow)]
+    for row in range(Const.kGameRow):
+        for col in range(Const.kGameCol):
             sumMap[row][col] = map2[row][col]
             top_value = sumMap[row - 1][col] if row > 0 else 0
             left_value = sumMap[row][col - 1] if col > 0 else 0
@@ -101,16 +97,16 @@ def getPrefixSum2(map2):
 
 def getSum10Rects(sum_map2, s_col, s_row):
     rects = []
-    for row in range(s_row, kGameRow):
-        for col in range(s_col, kGameCol):
+    for row in range(s_row, Const.kGameRow):
+        for col in range(s_col, Const.kGameCol):
             top_value = sum_map2[s_row - 1][col] if s_row > 0 else 0
             left_value = sum_map2[row][s_col - 1] if s_col > 0 else 0
             top_left_value = sum_map2[s_row - 1][s_col - 1] if s_row > 0 and s_col > 0 else 0
             tmp_sum = sum_map2[row][col] - top_value - left_value + top_left_value
-            if tmp_sum == kGameSum:
+            if tmp_sum == Const.kGameSum:
                 rects.append(DS.Rect(s_col, s_row, col - s_col + 1, row - s_row + 1))
             else:
-                if tmp_sum > kGameSum:
+                if tmp_sum > Const.kGameSum:
                     break
     return rects
 
@@ -131,10 +127,10 @@ def getSteps(gameMaps, score, steps):
         return True
     sumGameMap = getPrefixSum2(gameMaps)
     # debugInfo("gameMaps: ", gameMaps)
-    if sumGameMap[kGameRow - 1][kGameCol - 1] == 0:
+    if sumGameMap[Const.kGameRow - 1][Const.kGameCol - 1] == 0:
         return True
-    for row in range(kGameRow):
-        for col in range(kGameCol):
+    for row in range(Const.kGameRow):
+        for col in range(Const.kGameCol):
             if gameMaps[row][col] == 0:
                 continue
             sum10_rects = getSum10Rects(sumGameMap, col, row)
@@ -175,7 +171,7 @@ if __name__ == "__main__":
     for i in range(len(ocrResults)):
         print("{} ".format(ocrResults[i].v), end="")
 
-    if len(ocrResults) < kGameCol * kGameRow:
+    if len(ocrResults) < Const.kGameCol * Const.kGameRow:
         print("数字识别失败！")
         exit(-1)
 
